@@ -48,19 +48,21 @@ public class AdminController {
     }
 
     @PatchMapping("/{id}")
-    public CompletableFuture<ResponseEntity<AdminDto>> updateAdmin(
+    public ResponseEntity<AdminDto> updateAdmin(
             @PathVariable String id,
             @RequestBody UpdateAdminRequest request,
             Authentication authentication) {
         
         // Verify user is updating their own profile or is authorized
         if (!authentication.getName().equals(id)) {
-            return CompletableFuture.failedFuture(
-                    new IllegalArgumentException("Cannot update other user's profile")
-            );
+            throw new IllegalArgumentException("Cannot update other user's profile");
         }
 
-        return adminService.updateAdmin(id, request)
-                .thenApply(dto -> ResponseEntity.status(HttpStatus.OK).body(dto));
+        try {
+            AdminDto dto = adminService.updateAdmin(id, request).get();
+            return ResponseEntity.status(HttpStatus.OK).body(dto);
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating admin", e);
+        }
     }
 }

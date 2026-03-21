@@ -11,90 +11,141 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.time.LocalDateTime;
 
 @RestController
+@RequestMapping("/api/v1/configuration")
 @CrossOrigin(origins = "*")
 public class ConfigurationController {
 
     @Autowired
     private ConfigurationService configurationService;
 
-    @PostMapping("/api/v1/configuration/create")
-    public CompletableFuture<ResponseEntity<ConfigurationDto>> createConfiguration(
+    private ResponseEntity<?> buildErrorResponse(String message, HttpStatus status) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", status.value());
+        response.put("error", message);
+        return new ResponseEntity<>(response, status);
+    }
+
+    private HttpStatus getStatusForException(Throwable e) {
+        if (e != null && e.getCause() instanceof IllegalArgumentException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        return HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    private String getMessageForException(Throwable e) {
+        if (e != null && e.getCause() instanceof IllegalArgumentException) {
+            return e.getCause().getMessage();
+        }
+        return "Internal server error";
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createConfiguration(
             @Valid @RequestBody CreateConfigurationRequest request,
             Authentication authentication) {
         
-        return configurationService.createConfiguration(authentication.getName(), request)
-                .thenApply(dto -> ResponseEntity.status(HttpStatus.OK).body(dto));
+        try {
+            ConfigurationDto dto = configurationService.createConfiguration(authentication.getName(), request).get();
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to create configuration", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @GetMapping("/api/v1/configurations")
-    public CompletableFuture<ResponseEntity<List<ConfigurationDto>>> getConfigurations(
-            Authentication authentication) {
-        
-        return configurationService.getConfigurationsByUser(authentication.getName())
-                .thenApply(list -> ResponseEntity.status(HttpStatus.OK).body(list));
+    @GetMapping("/configurations")
+    public ResponseEntity<?> getConfigurations(Authentication authentication) {
+        try {
+            List<ConfigurationDto> list = configurationService.getConfigurationsByUser(authentication.getName()).get();
+            return ResponseEntity.status(HttpStatus.OK).body(list);
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to fetch configurations", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @GetMapping("/api/v1/configurations/history/{configurationId}")
-    public CompletableFuture<ResponseEntity<List<HistoryEntryDto>>> getConfigurationHistory(
+    @GetMapping("/history/{configurationId}")
+    public ResponseEntity<?> getConfigurationHistory(
             @PathVariable String configurationId,
             Authentication authentication) {
-        
-        return configurationService.getConfigurationHistory(configurationId, authentication.getName())
-                .thenApply(list -> ResponseEntity.status(HttpStatus.OK).body(list));
+        try {
+            List<HistoryEntryDto> list = configurationService.getConfigurationHistory(configurationId, authentication.getName()).get();
+            return ResponseEntity.status(HttpStatus.OK).body(list);
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to fetch history", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @GetMapping("/api/v1/configuration/stats/{configurationId}")
-    public CompletableFuture<ResponseEntity<ConfigurationStatsDto>> getConfigurationStats(
+    @GetMapping("/stats/{configurationId}")
+    public ResponseEntity<?> getConfigurationStats(
             @PathVariable String configurationId,
             Authentication authentication) {
-        
-        return configurationService.getConfigurationStats(configurationId, authentication.getName())
-                .thenApply(dto -> ResponseEntity.status(HttpStatus.OK).body(dto));
+        try {
+            ConfigurationStatsDto dto = configurationService.getConfigurationStats(configurationId, authentication.getName()).get();
+            return ResponseEntity.status(HttpStatus.OK).body(dto);
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to fetch stats", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @PatchMapping("/api/v1/configuration/{configurationId}")
-    public CompletableFuture<ResponseEntity<Void>> updateConfiguration(
+    @PatchMapping("/{configurationId}")
+    public ResponseEntity<?> updateConfiguration(
             @PathVariable String configurationId,
             @RequestBody UpdateConfigurationRequest request,
             Authentication authentication) {
-        
-        return configurationService.updateConfiguration(configurationId, authentication.getName(), request)
-                .thenApply(dto -> ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>body(null))
-                .exceptionally(e -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<Void>body(null));
+        try {
+            configurationService.updateConfiguration(configurationId, authentication.getName(), request).get();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to update configuration", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @PutMapping("/api/v1/configuration/{version}/{configurationId}")
-    public CompletableFuture<ResponseEntity<Void>> setConfigurationVersion(
+    @PutMapping("/{version}/{configurationId}")
+    public ResponseEntity<?> setConfigurationVersion(
             @PathVariable String configurationId,
             @PathVariable Long version,
             Authentication authentication) {
-        
-        return configurationService.setConfigurationVersion(configurationId, version, authentication.getName())
-                .thenApply(v -> ResponseEntity.status(HttpStatus.ACCEPTED).<Void>body(null));
+        try {
+            configurationService.setConfigurationVersion(configurationId, version, authentication.getName()).get();
+            return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to set version", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @DeleteMapping("/api/v1/configuration/{configurationId}")
-    public CompletableFuture<ResponseEntity<Void>> deleteConfiguration(
+    @DeleteMapping("/{configurationId}")
+    public ResponseEntity<?> deleteConfiguration(
             @PathVariable String configurationId,
             Authentication authentication) {
-        
-        return configurationService.deleteConfiguration(configurationId, authentication.getName())
-                .thenApply(v -> ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>body(null));
+        try {
+            configurationService.deleteConfiguration(configurationId, authentication.getName()).get();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to delete configuration", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @PutMapping("/api/v1/configuration/transfer/{configurationId}")
-    public CompletableFuture<ResponseEntity<Void>> transferOwnership(
+    @PutMapping("/transfer/{configurationId}")
+    public ResponseEntity<?> transferOwnership(
             @PathVariable String configurationId,
             @RequestBody TransferOwnershipRequest request,
             Authentication authentication) {
-        
-        return configurationService.transferOwnership(configurationId, authentication.getName(), request)
-                .thenApply(v -> ResponseEntity.status(HttpStatus.ACCEPTED).<Void>body(null));
+        try {
+            configurationService.transferOwnership(configurationId, authentication.getName(), request).get();
+            return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to transfer ownership", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

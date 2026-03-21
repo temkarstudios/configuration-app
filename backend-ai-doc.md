@@ -55,8 +55,8 @@ The Configuration App provides a centralized configuration management system for
 | Method | Path | Description | Status |
 |---|---|---|---|
 | `POST` | `/api/v1/configuration/create` | Creates a new configuration | 200 |
-| `GET` | `/api/v1/configurations` | Returns active configurations for logged-in user (OWNER or in `adminIds`) | 200 |
-| `GET` | `/api/v1/configurations/history/{configurationId}` | Returns version history list: `[{ version, lastModifiedDate, active }]` | 200 |
+| `GET` | `/api/v1/configuration/configurations` | Returns active configurations for logged-in user (OWNER or in `adminIds`) | 200 |
+| `GET` | `/api/v1/configuration/history/{configurationId}` | Returns version history list: `[{ version, lastModifiedDate, active }]` | 200 |
 | `GET` | `/api/v1/configuration/stats/{configurationId}` | Returns lookup stats for a configuration | 200 |
 | `PATCH` | `/api/v1/configuration/{configurationId}` | Updates configuration — receives entire updated JSON; creates new version from active | 204 |
 | `PUT` | `/api/v1/configuration/{version}/{configurationId}` | Sets a specific version as the active configuration | 202 |

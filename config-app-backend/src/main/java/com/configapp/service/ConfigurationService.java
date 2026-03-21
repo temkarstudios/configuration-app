@@ -63,8 +63,8 @@ public class ConfigurationService {
                 .build();
         statsRepository.save(stats);
 
-        // Increment user's configuration count
-        Admin admin = adminRepository.findById(userId)
+        // Verify user exists
+        Admin admin = adminRepository.findByUsername(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Admin not found"));
         admin.setNumberOfConfigurationsOwned(admin.getNumberOfConfigurationsOwned() + 1);
         adminRepository.save(admin);
@@ -217,12 +217,12 @@ public class ConfigurationService {
         }
 
         // Verify new owner exists
-        adminRepository.findById(request.getTransferTo())
+        Admin newOwner = adminRepository.findByUsername(request.getTransferTo())
                 .orElseThrow(() -> new IllegalArgumentException("Target admin not found"));
 
         // Update all versions
         allVersions.forEach(c -> {
-            c.setOwner(request.getTransferTo());
+            c.setOwner(newOwner.getUsername());
             configurationRepository.save(c);
         });
 

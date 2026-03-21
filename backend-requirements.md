@@ -26,8 +26,8 @@ PATCH - /api/v1/admin/{id}                              → update user details 
 POST - /api/v1/admin/login                              → returns `{ token, refreshToken, expiresIn, user }` (HTTP status 200)
 POST - /api/v1/admin/refresh                            → token refresh (accepts { "refreshToken": "..." }) returns as same as login
 POST - /api/v1/configuration/create                     → creates a new configuration (HTTP Status 200)
-GET - /api/v1/configurations                            → returns list of configurations (active) for the logged-in user (both owns and adminIds) (HTTP Status 200)
-GET - /api/v1/configurations/history/{configurationId}  → returns specific configuration with all versions [{ version, lastModifiedDate, active }] (HTTP Status 200)
+GET - /api/v1/configuration/configurations              → returns list of configurations (active) for the logged-in user (both owns and adminIds) (HTTP Status 200)
+GET - /api/v1/configuration/history/{configurationId}  → returns specific configuration with all versions [{ version, lastModifiedDate, active }] (HTTP Status 200)
 GET - /api/v1/configuration/stats/{configurationId}     → returns configuration usage stats (HTTP Status 200)
 PATCH - /api/v1/configuration/{configurationId}         → updates configuration (creates new version from the active) (HTTP Status 204)
 PUT - /api/v1/configuration/{version}/{configurationId} → enables speicifc version as active configuration (HTTP Status 202)

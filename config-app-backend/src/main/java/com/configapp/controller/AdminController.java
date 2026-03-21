@@ -1,116 +1,66 @@
 package com.configapp.controller;
 
-import com.configapp.dto.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.configapp.dto.AdminDto;
+import com.configapp.dto.LoginRequest;
+import com.configapp.dto.LoginResponse;
+import com.configapp.dto.RegisterRequest;
+import com.configapp.dto.RefreshTokenRequest;
+import com.configapp.dto.UpdateAdminRequest;
+import com.configapp.service.AdminService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
+import java.util.concurrent.CompletableFuture;
 
-/**
- * Admin Controller - handles authentication and admin management endpoints.
- * 
- * Supports:
- * - User registration
- * - Login with JWT token generation
- * - Token refresh
- * - Admin profile retrieval and updates
- */
 @RestController
 @RequestMapping("/api/v1/admin")
-@RequiredArgsConstructor
-@Slf4j
+@CrossOrigin(origins = "*")
 public class AdminController {
 
-    // TODO: Inject AdminService once created
+    @Autowired
+    private AdminService adminService;
 
-    /**
-     * Register a new admin user.
-     * 
-     * @param registerRequest contains username and password
-     * @return AdminResponse with user details
-     */
     @PostMapping("/register")
-    public ResponseEntity<AdminResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        log.info("New registration request for username: {}", registerRequest.getUsername());
-        // TODO: Implement registration logic
-        // - Validate email uniqueness
-        // - Hash password with bcrypt
-        // - Save to MongoDB
-        // - Return AdminResponse (200)
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public CompletableFuture<ResponseEntity<AdminDto>> register(@Valid @RequestBody RegisterRequest request) {
+        return adminService.register(request)
+                .thenApply(dto -> ResponseEntity.status(HttpStatus.OK).body(dto));
     }
 
-    /**
-     * Authenticate admin and return JWT tokens.
-     * 
-     * @param loginRequest contains username and password
-     * @return LoginResponse with access token, refresh token, expiration, and user details
-     */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        log.info("Login attempt for username: {}", loginRequest.getUsername());
-        // TODO: Implement login logic
-        // - Validate credentials against stored hash
-        // - Generate JWT access token
-        // - Generate refresh token
-        // - Return LoginResponse (200)
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public CompletableFuture<ResponseEntity<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        return adminService.login(request)
+                .thenApply(response -> ResponseEntity.status(HttpStatus.OK).body(response));
     }
 
-    /**
-     * Refresh access token using refresh token.
-     * 
-     * @param refreshTokenRequest contains the refresh token
-     * @return LoginResponse with new access token
-     */
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        log.info("Token refresh request");
-        // TODO: Implement token refresh logic
-        // - Validate refresh token
-        // - Generate new access token
-        // - Return LoginResponse (200)
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public CompletableFuture<ResponseEntity<LoginResponse>> refresh(@RequestBody RefreshTokenRequest request) {
+        return adminService.refresh(request)
+                .thenApply(response -> ResponseEntity.status(HttpStatus.OK).body(response));
     }
 
-    /**
-     * Get admin user details by ID.
-     * Requires JWT authentication.
-     * 
-     * @param id admin user ID
-     * @return AdminResponse with user details
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<AdminResponse> getAdmin(@PathVariable String id) {
-        log.info("Fetching admin details for ID: {}", id);
-        // TODO: Implement GET logic
-        // - Verify JWT token
-        // - Fetch admin by ID from MongoDB
-        // - Return AdminResponse (200)
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public CompletableFuture<ResponseEntity<AdminDto>> getAdmin(@PathVariable String id) {
+        return adminService.getAdminById(id)
+                .thenApply(dto -> ResponseEntity.status(HttpStatus.OK).body(dto));
     }
 
-    /**
-     * Update admin user details (username, active status only).
-     * Requires JWT authentication.
-     * 
-     * @param id admin user ID
-     * @param updateRequest contains fields to update (username, active)
-     * @return AdminResponse with updated user details
-     */
     @PatchMapping("/{id}")
-    public ResponseEntity<AdminResponse> updateAdmin(
+    public CompletableFuture<ResponseEntity<AdminDto>> updateAdmin(
             @PathVariable String id,
-            @Valid @RequestBody AdminUpdateRequest updateRequest) {
-        log.info("Updating admin details for ID: {}", id);
-        // TODO: Implement PATCH logic
-        // - Verify JWT token
-        // - Update only username and active fields
-        // - Persist to MongoDB
-        // - Return AdminResponse (200)
-        return ResponseEntity.status(HttpStatus.OK).build();
+            @RequestBody UpdateAdminRequest request,
+            Authentication authentication) {
+        
+        // Verify user is updating their own profile or is authorized
+        if (!authentication.getName().equals(id)) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("Cannot update other user's profile")
+            );
+        }
+
+        return adminService.updateAdmin(id, request)
+                .thenApply(dto -> ResponseEntity.status(HttpStatus.OK).body(dto));
     }
 }

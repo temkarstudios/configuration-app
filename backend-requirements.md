@@ -13,7 +13,8 @@ OWNER → owns configuration (assigned when configuration gets created)
 EDITOR → can view and edit configuration (cannot be deleted neither can change ownership)
 
 ## Backend Tech stack
-- Backend: Java, Sprint-Boot, REST IO bound APIs using spring @Async (https://spring.io/guides/gs/async-method)
+- Java version: 21+
+- Backend: Java, Sprint-Boot 3.5, REST API, for IO bound APIs use virtual threads (like Project Loom)
 - Database: MongoDB (Server runs in local endpoint needs to be added in code)
 - Auth: JWT
 - Hosting: Docker compose (local setup for spring boot app only)
@@ -66,14 +67,19 @@ Note:
     "createdDate": "<date-time>",
     "lastModifiedDate": "<date-time>",
     "adminIds": ["<adminis-guid>"...],
-    "settings": [
-        {
+    "settings": {
+        "key-1": {
             "id": "<setting-guid>",
-            "key": "<key-string>",
             "value": "<object>",
             "type": "<object>"
-        }
-    ],
+        },
+        "key-2": {
+            "id": "<setting-guid>",
+            "value": "<string>",
+            "type": "<string>"
+        },
+        ...
+    },
     "additionalProperties": {
         "property-1": "<object>",
         "property-2": "<object>"

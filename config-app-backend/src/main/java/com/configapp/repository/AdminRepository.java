@@ -1,9 +1,8 @@
 package com.configapp.repository;
 
-import com.configapp.document.Admin;
+import com.configapp.model.Admin;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 
 @Repository

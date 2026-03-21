@@ -31,7 +31,7 @@ The Configuration App provides a centralized configuration management system for
 |---|---|
 | Language | Java |
 | Framework | Spring Boot |
-| API Style | REST — IO-bound using `@Async` ([reference](https://spring.io/guides/gs/async-method)) |
+| API Style | REST — Non IO-bound using `@Async` and virtual thread ([reference](https://spring.io/guides/gs/async-method)) |
 | Database | MongoDB (local endpoint — connection string to be added in code) |
 | Auth | JWT (access token + refresh token) |
 | Hosting | Docker Compose (local setup, Spring Boot app only) |

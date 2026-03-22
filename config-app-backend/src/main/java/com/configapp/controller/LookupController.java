@@ -18,11 +18,11 @@ public class LookupController {
     private LookupService lookupService;
 
     @PostMapping("/{configurationId}")
-    public CompletableFuture<ResponseEntity<Map<String, Object>>> lookup(
+    public ResponseEntity<Map<String, Object>> lookup(
             @PathVariable String configurationId,
-            @RequestBody LookupRequest request) {
+            @RequestBody LookupRequest request) throws Exception {
         
-        return lookupService.lookup(configurationId, request)
-                .thenApply(result -> ResponseEntity.status(HttpStatus.OK).body(result));
+        var result = lookupService.lookup(configurationId, request).get();
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }
